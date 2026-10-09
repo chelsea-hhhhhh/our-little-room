@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>我们的小屋</title>
+<style>
+  :root{
+    --bg1:#fdeee8; --bg2:#fdf6f1; --card:#fffdfb; --ink:#3b3230; --muted:#9c8c87;
+    --line:#f2e4dd; --rose:#dd7089; --rose-soft:#fbe9ee; --shadow:0 8px 24px rgba(184,146,132,.13);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;color:var(--ink);
+    background:radial-gradient(130% 90% at 50% -10%,var(--bg1),var(--bg2) 55%) no-repeat;
+    background-color:var(--bg2);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:30px 16px 70px}
+  header{text-align:center;margin-bottom:22px}
+  h1{margin:0 0 6px;font-size:25px;letter-spacing:3px;font-weight:600}
+  .sub{margin:0;color:var(--muted);font-size:13px;letter-spacing:1px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+  .pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  .who{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+  .name{font:inherit;font-size:17px;font-weight:600;color:var(--ink);background:transparent;border:0;
+        border-bottom:1px dashed transparent;padding:2px 0;width:6.5em}
+  .name:hover,.name:focus{border-bottom-color:var(--line);outline:none}
+  .place{font-size:12px;color:var(--muted)}
+  .clock{font-size:38px;font-weight:600;letter-spacing:2px;font-variant-numeric:tabular-nums;line-height:1.1}
+  .clock small{font-size:19px;color:var(--muted);font-weight:400;letter-spacing:1px}
+  .day{font-size:13px;color:var(--muted);margin-top:2px;min-height:18px}
+  .diff{font-size:12px;color:var(--rose);margin-top:8px;min-height:16px}
+  .weather{display:flex;align-items:center;gap:8px;font-size:14px;margin:14px 0 0;color:#5c4f4b;min-height:24px}
+  .weather b{font-weight:600}
+  .retry{color:var(--rose);cursor:pointer;text-decoration:underline;font-size:12px}
+  .moods{display:flex;flex-wrap:wrap;gap:4px;margin:14px 0 6px}
+  .moods button{font-size:16px;line-height:1;padding:5px;border-radius:12px;border:1px solid var(--line);
+                background:#fff;cursor:pointer;transition:transform .15s}
+  .moods button:hover{transform:translateY(-1px)}
+  .moods button.on{background:var(--rose-soft);border-color:#f0c3ce}
+  .moodline{font-size:12px;color:var(--muted);min-height:16px}
+  textarea,input.txt{width:100%;font:inherit;font-size:14px;color:var(--ink);border:1px solid var(--line);
+        border-radius:12px;padding:10px 12px;background:#fffdfb;resize:vertical;outline:none}
+  textarea:focus,input.txt:focus{border-color:#ecc3cd}
+  .word{margin-top:12px;min-height:74px}
+  .wordat{font-size:11px;color:var(--muted);text-align:right;margin-top:4px;min-height:14px}
+  .h2{margin:0 0 10px;font-size:15px;font-weight:600;letter-spacing:1px;color:#7a6a66}
+  .tip{margin:0 0 12px;font-size:12.5px;line-height:1.7;color:var(--muted)}
+  .meet,.sync,.quiz{margin-bottom:16px}
+  .meetrow{display:grid;grid-template-columns:1.1fr 1fr;gap:10px}
+  .count{margin-top:14px;font-size:15px;color:#6d5f5b;font-variant-numeric:tabular-nums}
+  .count b{font-size:26px;color:var(--rose);font-weight:600;margin:0 2px}
+  .count .past{font-size:19px;color:var(--rose)}
+  .btn{font:inherit;font-size:14px;border:0;border-radius:12px;padding:10px 16px;background:var(--rose);color:#fff;
+       cursor:pointer;transition:opacity .15s}
+  .btn:hover{opacity:.9}
+  .btn.ghost{background:var(--rose-soft);color:#b9546d}
+  .code{min-height:74px;margin-top:10px;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.6;word-break:break-all}
+  .or{font-size:12.5px;color:var(--muted);margin:16px 0 0}
+  .q{margin:14px 0 10px;font-size:17px;line-height:1.7;color:#4a3f3c;min-height:30px}
+  .q.live{color:var(--ink);font-weight:600}
+  .ans{min-height:90px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .foot{margin:22px 0 0;font-size:12px;line-height:1.9;color:var(--muted);text-align:center}
+  #toast{position:fixed;left:50%;bottom:34px;transform:translate(-50%,14px);background:rgba(59,50,48,.92);color:#fff;
+         font-size:13.5px;padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;z-index:9}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  @media(max-width:720px){
+    .pair{grid-template-columns:1fr}
+    .meetrow{grid-template-columns:1fr}
+    .clock{font-size:34px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>我们的小屋</h1>
+    <p class="sub">两个地方，一间屋子</p>
+  </header>
+
+  <section class="pair">
+    <article class="card person">
+      <div class="who"><input class="name" data-name="me" value="我"><span class="place" data-place="me">广州 · 白云</span></div>
+      <div class="clock" data-clock="me">--:--<small>:--</small></div>
+      <div class="day" data-day="me"></div>
+      <div class="diff"></div>
+      <div class="weather" data-wx="me">天气加载中…</div>
+      <div class="moods" data-moods="me"></div>
+      <div class="moodline" data-moodline="me"></div>
+      <textarea class="word" data-word="me" placeholder="想对 TA 说的话，写在这里"></textarea>
+      <div class="wordat" data-wordat="me"></div>
+    </article>
+
+    <article class="card person">
+      <div class="who"><input class="name" data-name="other" value="她"><span class="place" data-place="other">广州 · 花都</span></div>
+      <div class="clock" data-clock="other">--:--<small>:--</small></div>
+      <div class="day" data-day="other"></div>
+      <div class="diff" data-diff></div>
+      <div class="weather" data-wx="other">天气加载中…</div>
+      <div class="moods" data-moods="other"></div>
+      <div class="moodline" data-moodline="other"></div>
+      <textarea class="word" data-word="other" placeholder="TA 的心情和留言，会从分享码里同步过来"></textarea>
+      <div class="wordat" data-wordat="other"></div>
+    </article>
+  </section>
+
+  <section class="card meet">
+    <h2 class="h2">下次见面</h2>
+    <div class="meetrow">
+      <input class="txt" id="meetTitle" placeholder="给这次见面起个名字（可留空）">
+      <input class="txt" id="meetAt" type="datetime-local">
+    </div>
+    <div class="count" id="countdown">还没定日子</div>
+  </section>
+
+  <section class="card sync">
+    <h2 class="h2">把今天发给 TA</h2>
+    <p class="tip">点下面的按钮生成一串分享码，复制到微信发给 TA。TA 把它粘进自己那份页面里，就能看到你的名字、心情和留言。</p>
+    <button class="btn" id="genCode">生成我的分享码</button>
+    <textarea class="code" id="codeOut" readonly placeholder="生成后会自动复制，也可以手动全选复制"></textarea>
+    <div class="or">收到对方的分享码？粘在这里</div>
+    <textarea class="code" id="codeIn" placeholder="粘贴 TA 发来的那串字符"></textarea>
+    <button class="btn ghost" id="importBtn">导入</button>
+  </section>
+
+  <section class="card quiz">
+    <h2 class="h2">默契问答</h2>
+    <p class="tip">抽一个问题，写下你的答案，再复制成图片或文字丢给 TA。</p>
+    <button class="btn" id="drawQ">来一题</button>
+    <div class="q" id="qText">点「来一题」抽一个问题</div>
+    <textarea class="ans" id="qAnswer" placeholder="写下你的答案…"></textarea>
+    <div class="row">
+      <button class="btn ghost" id="copyQText">复制文字</button>
+      <button class="btn ghost" id="copyQImg">复制图片</button>
+      <button class="btn ghost" id="saveQImg">下载图片</button>
+    </div>
+  </section>
+
+  <p class="foot" id="foot">两个人各留一份这个文件就行。<br>页面上的内容存在你自己的浏览器里，换电脑时用分享码搬过去。</p>
+</div>
+<canvas id="cardCv" width="720" height="1000" hidden></canvas>
+
+<script>
+const MOODS = ['😄','🙂','😐','😔','😢','🥰','😴','🤒','😤','🥺'];
+
+// 两个人的位置：坐标和时区决定钟表与天气，改了记得同步给对方
+const PLACE = {
+  me:    { place:'广州 · 白云', tz:'Asia/Shanghai', lat:23.1606, lon:113.2679 },
+  other: { place:'广州 · 花都', tz:'Asia/Shanghai', lat:23.4612, lon:113.2142 }
+};
+
+const WMO = {
+  0:['☀️','晴'],1:['🌤️','大致晴朗'],2:['⛅','多云'],3:['☁️','阴'],45:['🌫️','有雾'],48:['🌫️','雾凇'],
+  51:['🌦️','毛毛雨'],53:['🌦️','毛毛雨'],55:['🌦️','大毛毛雨'],56:['🌧️','冻毛毛雨'],57:['🌧️','冻毛毛雨'],
+  61:['🌧️','小雨'],63:['🌧️','中雨'],65:['🌧️','大雨'],66:['🌧️','冻雨'],67:['🌧️','冻雨'],
+  71:['🌨️','小雪'],73:['🌨️','中雪'],75:['❄️','大雪'],77:['🌨️','雪粒'],
+  80:['🌦️','阵雨'],81:['🌦️','阵雨'],82:['⛈️','强阵雨'],85:['🌨️','阵雪'],86:['🌨️','强阵雪'],
+  95:['⛈️','雷阵雨'],96:['⛈️','雷暴冰雹'],99:['⛈️','雷暴冰雹']
+};
+
+const QUESTIONS = [
+  '如果只能带走我的一样东西，你会带什么？',
+  '我们第一次见面，你印象最深的是哪个瞬间？',
+  '最近一次想我，是什么时候？',
+  '我做过哪件小事，让你偷偷开心了很久？',
+  '如果明天就能见面，你最想和我去干嘛？',
+  '我们吵过的架里，你最想删掉哪一次？',
+  '你觉得我最像哪种小动物？',
+  '我哪个习惯，你最想让我改？',
+  '说一件你还没告诉过我的小事。',
+  '如果有一个只有我们俩知道的地方，它是什么样的？',
+  '你手机里我最喜欢的那张照片是什么？',
+  '如果给我做一顿饭，你会做什么？',
+  '和我在一起之后，你觉得自己变了什么？',
+  '你最想和我一起完成的一件事是什么？',
+  '我说过的哪句话，你到现在还记得？',
+  '如果用一首歌形容我们，是哪首？',
+  '你觉得我们最像哪部电影里的情侣？',
+  '你想和我一起养什么？猫、狗，还是别的？',
+  '最近有什么事让你很累，我却还不知道？',
+  '我给过你的最好的一个瞬间是什么？',
+  '如果要给我们之间加一个专属暗号，会是什么？',
+  '你偷偷觉得我们俩谁更黏人？',
+  '十年后的一个普通周末，你希望我们在做什么？',
+  '有什么事你以为我忘了，其实我一直记得？',
+  '你最近偷偷为我做的准备是什么？',
+  '我做什么事的时候，你最想抱我？',
+  '如果只能记住我们的一天，你选哪一天？',
+  '你希望我少说哪句话，多说哪句话？',
+  '我们第一次牵手的时候，你在想什么？',
+  '有什么事你一直想问我，却一直没问？'
+];
+
+const KEY = 'couple-home-v1';
+let storageOK = true;
+try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); } catch (e) { storageOK = false; }
+
+const store = {
+  get(k){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+const blank = name => ({ name, mood:'', moodDate:'', word:'', wordAt:'' });
+
+let st = store.get(KEY);
+if (!st || st.v !== 1) st = { v:1, meId:uid(), otherId:'', me:blank('我'), other:blank('她'), meet:{ at:'', title:'' } };
+
+const $ = s => document.querySelector(s);
+const save = () => store.set(KEY, st);
+
+/* ---------- 时间 ---------- */
+const fmtCache = new Map();
+function fmt(tz, opts){
+  const k = tz + '|' + JSON.stringify(opts);
+  let f = fmtCache.get(k);
+  if (!f) { f = new Intl.DateTimeFormat('zh-CN', Object.assign({ timeZone: tz }, opts)); fmtCache.set(k, f); }
+  return f;
+}
+const parts = (tz, d, opts) => fmt(tz, opts).formatToParts(d).reduce((o, p) => (o[p.type] = p.value, o), {});
+const P_TIME = { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false };
+const P_DAY  = { month:'numeric', day:'numeric', weekday:'short' };
+const P_NUM  = { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false };
+
+function dayKey(tz, d = new Date()){
+  const p = parts(tz, d, P_NUM);
+  return p.year + '-' + p.month + '-' + p.day;
+}
+function todayCn(){ const p = parts(PLACE.me.tz, new Date(), P_NUM); return p.year + '年' + (+p.month) + '月' + (+p.day) + '日'; }
+function offsetMin(tz, d){
+  const p = parts(tz, d, P_NUM);
+  const base = Math.floor(d.getTime() / 60000) * 60000;
+  return Math.round((Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute) - base) / 60000);
+}
+function whenText(dateStr, tz){
+  if (!dateStr) return '';
+  const today = dayKey(tz);
+  if (today === dateStr) return '今天';
+  const diff = Math.round((Date.parse(today) - Date.parse(dateStr)) / 86400000);
+  if (diff === 1) return '昨天';
+  if (diff > 1) return diff + ' 天前';
+  return dateStr;
+}
+function nowCn(tz){
+  const p = parts(tz, new Date(), P_NUM);
+  return (+p.month) + '月' + (+p.day) + '日 ' + p.hour + ':' + p.minute;
+}
+
+/* ---------- 画面 ---------- */
+function renderSide(side){
+  const s = st[side], p = PLACE[side];
+  const nameEl = $('[data-name="' + side + '"]');
+  if (document.activeElement !== nameEl) nameEl.value = s.name;
+  $('[data-place="' + side + '"]').textContent = p.place;
+  document.querySelectorAll('[data-moods="' + side + '"] button').forEach(b => b.classList.toggle('on', b.dataset.m === s.mood));
+  $('[data-moodline="' + side + '"]').textContent = s.mood ? s.mood + ' ' + whenText(s.moodDate, p.tz) + '打卡' : '今天还没打卡';
+  const w = $('[data-word="' + side + '"]');
+  if (document.activeElement !== w && w.value !== s.word) w.value = s.word;
+  $('[data-wordat="' + side + '"]').textContent = s.wordAt ? '写于 ' + s.wordAt : '';
+}
+function render(){
+  renderSide('me');
+  renderSide('other');
+  $('#meetTitle').value = st.meet.title || '';
+  $('#meetAt').value = st.meet.at || '';
+}
+
+function tick(){
+  const now = new Date();
+  ['me','other'].forEach(side => {
+    const tz = PLACE[side].tz;
+    const t = parts(tz, now, P_TIME);
+    $('[data-clock="' + side + '"]').innerHTML = '<span>' + t.hour + ':' + t.minute + '</span><small>:' + t.second + '</small>';
+    const d = parts(tz, now, P_DAY);
+    $('[data-day="' + side + '"]').textContent = (+d.month) + '月' + (+d.day) + '日 ' + d.weekday;
+  });
+  const mins = offsetMin(PLACE.other.tz, now) - offsetMin(PLACE.me.tz, now);
+  $('[data-diff]').textContent = mins === 0 ? '和你同一个时区，不用算时差'
+    : '那边比你' + (mins > 0 ? '早 ' : '晚 ') + Math.round(Math.abs(mins) / 6) / 10 + ' 小时';
+  updateCountdown(now);
+}
+
+function updateCountdown(now){
+  const out = $('#countdown');
+  if (!st.meet.at) { out.textContent = '还没定日子'; return; }
+  const title = st.meet.title ? st.meet.title + ' · ' : '';
+  let ms = new Date(st.meet.at).getTime() - now.getTime();
+  if (isNaN(ms)) { out.textContent = '还没定日子'; return; }
+  if (ms < 0) {
+    const d = Math.floor(-ms / 86400000);
+    out.innerHTML = '<span class="past">' + title + (d > 0 ? '上次见面已经过去 ' + d + ' 天' : '就是今天！') + '</span>';
+    return;
+  }
+  const d = Math.floor(ms / 86400000), h = Math.floor(ms / 3600000) % 24,
+        mi = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60;
+  out.innerHTML = title + '还有 <b>' + d + '</b> 天 <b>' + h + '</b> 小时 <b>' + mi + '</b> 分 <b>' + s + '</b> 秒';
+}
+
+/* ---------- 天气 ---------- */
+async function loadWeather(side, force){
+  const box = $('[data-wx="' + side + '"]'), p = PLACE[side];
+  const key = 'wx-' + side + '-' + dayKey(p.tz);
+  let data = force ? null : store.get(key);
+  if (!data) {
+    box.textContent = '天气加载中…';
+    try {
+      const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=' + p.lat + '&longitude=' + p.lon + '&current=temperature_2m,weather_code');
+      if (!r.ok) throw new Error(r.status);
+      const j = await r.json();
+      data = { t: Math.round(j.current.temperature_2m), c: j.current.weather_code };
+      store.set(key, data);
+    } catch (e) {
+      box.innerHTML = '<span>暂时取不到天气（可能没联网）</span> <span class="retry">重试</span>';
+      box.querySelector('.retry').onclick = () => loadWeather(side, true);
+      return;
+    }
+  }
+  const w = WMO[data.c] || ['🌡️',''];
+  box.innerHTML = '<span style="font-size:20px">' + w[0] + '</span><b>' + data.t + '°C</b><span>' + w[1] + '</span>';
+}
+
+/* ---------- 分享码 ---------- */
+function b64e(str){
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach(b => bin += String.fromCharCode(b));
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64d(s){
+  s = s.replace(/-/g,'+').replace(/_/g,'/');
+  const bin = atob(s);
+  return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+}
+async function copyText(t){
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch (e) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy'); ta.remove(); return ok;
+    } catch (e2) { return false; }
+  }
+}
+
+/* ---------- 卡片图 ---------- */
+function wrapText(ctx, text, maxW){
+  const out = [];
+  text.split('\n').forEach(para => {
+    let line = '';
+    for (const ch of para) {
+      if (line && ctx.measureText(line + ch).width > maxW) { out.push(line); line = ch; }
+      else line += ch;
+    }
+    out.push(line);
+  });
+  return out;
+}
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+const FONT = '"PingFang SC","Microsoft YaHei",system-ui,sans-serif';
+function drawCard(q, a){
+  const CW = 720, PAD = 54, DPR = 2;
+  const cv = $('#cardCv'), ctx = cv.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.font = '600 30px ' + FONT;
+  const qLines = wrapText(ctx, q, CW - PAD * 2);
+  ctx.font = '26px ' + FONT;
+  const aLines = wrapText(ctx, a, CW - PAD * 2);
+  const lineH = 46, top = 168, qH = qLines.length * lineH, aH = aLines.length * lineH;
+  const divY = top + qH + 14, labY = divY + 48, ansY = labY + 48;
+  const H = ansY + aH + 88;
+  cv.width = CW * DPR; cv.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const g = ctx.createLinearGradient(0, 0, CW, H);
+  g.addColorStop(0, '#fde7ec'); g.addColorStop(1, '#fdf3e6');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, CW, H);
+  roundRect(ctx, 26, 26, CW - 52, H - 52, 28);
+  ctx.fillStyle = '#fffdfb'; ctx.fill();
+  ctx.font = '600 20px ' + FONT; ctx.fillStyle = '#dd7089';
+  ctx.fillText('默契问答', PAD, 104);
+  ctx.font = '600 30px ' + FONT; ctx.fillStyle = '#3b3230';
+  qLines.forEach((l, i) => ctx.fillText(l, PAD, top + i * lineH));
+  ctx.strokeStyle = '#f2e4dd'; ctx.beginPath();
+  ctx.moveTo(PAD, divY); ctx.lineTo(CW - PAD, divY); ctx.stroke();
+  ctx.font = '600 20px ' + FONT; ctx.fillStyle = '#dd7089';
+  ctx.fillText('我的答案', PAD, labY);
+  ctx.font = '26px ' + FONT; ctx.fillStyle = '#5c4f4b';
+  aLines.forEach((l, i) => ctx.fillText(l, PAD, ansY + i * lineH));
+  ctx.font = '20px ' + FONT; ctx.fillStyle = '#9c8c87';
+  ctx.fillText('我们的小屋 · ' + todayCn(), PAD, H - 62);
+  return cv;
+}
+function saveBlob(blob, name){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
+/* ---------- 提示条 ---------- */
+let toastTimer;
+function toast(msg){
+  let t = $('#toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ---------- 交互 ---------- */
+['me','other'].forEach(side => {
+  const box = $('[data-moods="' + side + '"]');
+  MOODS.forEach(m => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = m; b.dataset.m = m;
+    b.onclick = () => {
+      st[side].mood = st[side].mood === m ? '' : m;
+      st[side].moodDate = st[side].mood ? dayKey(PLACE[side].tz) : '';
+      save(); renderSide(side);
+    };
+    box.appendChild(b);
+  });
+
+  const nameEl = $('[data-name="' + side + '"]');
+  nameEl.addEventListener('input', () => { st[side].name = nameEl.value || (side === 'me' ? '我' : '她'); save(); });
+  nameEl.addEventListener('blur', () => { st[side].name = (nameEl.value || '').trim() || (side === 'me' ? '我' : '她'); save(); renderSide(side); tick(); });
+
+  const wordEl = $('[data-word="' + side + '"]');
+  wordEl.addEventListener('input', () => {
+    st[side].word = wordEl.value;
+    st[side].wordAt = wordEl.value.trim() ? nowCn(PLACE[side].tz) : '';
+    $('[data-wordat="' + side + '"]').textContent = st[side].wordAt ? '写于 ' + st[side].wordAt : '';
+    save();
+  });
+});
+
+$('#meetTitle').addEventListener('input', e => { st.meet.title = e.target.value; save(); });
+$('#meetAt').addEventListener('change', e => { st.meet.at = e.target.value; save(); updateCountdown(new Date()); });
+
+$('#genCode').onclick = async () => {
+  const payload = {
+    v: 1, i: st.meId, n: st.me.name, mo: st.me.mood, mD: st.me.moodDate,
+    w: st.me.word, wA: st.me.wordAt, x: { a: st.meet.at, t: st.meet.title }
+  };
+  const code = b64e(JSON.stringify(payload));
+  const out = $('#codeOut');
+  out.value = code;
+  const ok = await copyText(code);
+  out.focus(); out.select();
+  toast(ok ? '分享码已复制，去微信粘贴给 TA' : '分享码已生成，手动全选复制一下');
+};
+
+$('#importBtn').onclick = () => {
+  const raw = $('#codeIn').value.replace(/\s+/g, '');
+  if (!raw) { toast('先把 TA 的分享码粘进来'); return; }
+  let o;
+  try {
+    o = JSON.parse(b64d(raw));
+    if (!o || o.v !== 1 || typeof o.i !== 'string') throw new Error('bad');
+  } catch (e) { toast('这串码看不懂，检查一下有没有复制完整'); return; }
+  const side = o.i === st.meId ? 'me' : 'other';
+  st[side] = { name: o.n || (side === 'me' ? '我' : 'TA'), mood: o.mo || '', moodDate: o.mD || '', word: o.w || '', wordAt: o.wA || '' };
+  if (side === 'other') st.otherId = o.i;
+  if (o.x && o.x.a) st.meet = { at: o.x.a, title: o.x.t || '' };
+  save(); render(); tick();
+  $('#codeIn').value = '';
+  toast(side === 'me' ? '这是你自己那份，已经恢复回来了' : '已经看到 ' + st.other.name + ' 的更新啦');
+};
+
+let curQ = '';
+$('#drawQ').onclick = () => {
+  let q;
+  do { q = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)]; } while (q === curQ);
+  curQ = q;
+  const box = $('#qText');
+  box.textContent = q; box.classList.add('live');
+};
+function quizReady(){
+  if (!curQ) { toast('先点「来一题」抽个问题'); return false; }
+  if (!$('#qAnswer').value.trim()) { toast('先写下你的答案'); return false; }
+  return true;
+}
+async function cardBlob(){
+  const cv = drawCard(curQ, $('#qAnswer').value.trim());
+  return await new Promise(r => cv.toBlob(r, 'image/png'));
+}
+$('#copyQText').onclick = async () => {
+  if (!quizReady()) return;
+  const txt = '【默契问答】\n' + curQ + '\n\n我的答案：\n' + $('#qAnswer').value.trim() + '\n\n—— 我们的小屋 · ' + todayCn();
+  toast(await copyText(txt) ? '文字已复制，去微信粘贴' : '复制失败，手动选中复制吧');
+};
+$('#copyQImg').onclick = async () => {
+  if (!quizReady()) return;
+  const blob = await cardBlob();
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    toast('图片已复制，去微信聊天框直接粘贴');
+  } catch (e) {
+    saveBlob(blob, '默契问答.png');
+    toast('这个环境不让直接复制图片，已经存成文件了，拖进微信一样能发');
+  }
+};
+$('#saveQImg').onclick = async () => {
+  if (!quizReady()) return;
+  saveBlob(await cardBlob(), '默契问答.png');
+  toast('图片已保存到「下载」文件夹');
+};
+
+/* ---------- 启动 ---------- */
+render();
+tick();
+setInterval(tick, 500);
+loadWeather('me');
+loadWeather('other');
+if (!storageOK) $('#foot').innerHTML = '当前浏览器不允许本地保存，关掉页面数据就没了，记得用分享码备份。';
+</script>
+</body>
+</html>
